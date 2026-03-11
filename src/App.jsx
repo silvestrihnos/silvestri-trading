@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 const INITIAL_STATE = {
   quadrants: {
@@ -341,6 +341,29 @@ function AlarmPanel({ alarms }) {
   );
 }
 
+function GlobalStyles() {
+  React.useEffect(() => {
+    const link = document.createElement("link");
+    link.href = "https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    const style = document.createElement("style");
+    style.textContent = [
+      "* { box-sizing: border-box; }",
+      "::-webkit-scrollbar { width: 4px; }",
+      "::-webkit-scrollbar-track { background: #0F0F14; }",
+      "::-webkit-scrollbar-thumb { background: #2A2A35; border-radius: 2px; }",
+      "input, textarea { outline: none; }",
+      "input:focus, textarea:focus { border-color: #555 !important; }",
+      "@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }",
+      "@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }",
+      ".fade-in { animation: fadeIn 0.4s ease forwards; }"
+    ].join(" ");
+    document.head.appendChild(style);
+  }, []);
+  return null;
+}
+
 export default function TradingDashboard() {
   const [state, setState] = useState(INITIAL_STATE);
   const [time, setTime] = useState(new Date());
@@ -441,18 +464,7 @@ export default function TradingDashboard() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#080810", color: "#fff", fontFamily: "'DM Mono', monospace" }}>
-      <style>{"
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #0F0F14; }
-        ::-webkit-scrollbar-thumb { background: #2A2A35; border-radius: 2px; }
-        input, textarea { outline: none; }
-        input:focus, textarea:focus { border-color: #555 !important; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.4s ease forwards; }
-      "}</style>
+      <GlobalStyles />
 
       {/* Top bar */}
       <div style={{ background: "#0A0A12", borderBottom: "1px solid #1E1E2A", padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 100 }}>
