@@ -1,6 +1,3 @@
-<details>
-<summary>👉 Hacé clic acá para ver el contenido de App.jsx (copiar todo)</summary>
-```jsx
 import { useState, useEffect, useCallback } from "react";
 const INITIAL_STATE = {
 quadrants: {
@@ -64,12 +61,28 @@ function formatPct(n) {
 return (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 }
 function MiniSparkline({ trades, color }) {
-if (!trades || trades.length < 2) {
-return (
-<svg width="80" height="28" viewBox="0 0 80 28">
-<line x1="0" y1="14" x2="80" y2="14" stroke="#333" strokeWidth="1" strokeDasharray="4 2" />
-</svg>
-);
+  if (!trades || trades.length < 2) {
+    return (
+      <svg width="80" height="28" viewBox="0 0 80 28">
+        <line x1="0" y1="14" x2="80" y2="14" stroke="#333" strokeWidth="1" strokeDasharray="4 2" />
+      </svg>
+    );
+  }
+  let running = 0;
+  const points = trades.map((t) => { running += t.pnl; return running; });
+  const min = Math.min(0, ...points);
+  const max = Math.max(0, ...points);
+  const range = max - min || 1;
+  const pts = points.map((v, i) => {
+    const x = (i / (points.length - 1)) * 80;
+    const y = 26 - ((v - min) / range) * 24;
+    return `${x},${y}`;
+  });
+  return (
+    <svg width="80" height="28" viewBox="0 0 80 28">
+      <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" opacity="0.8" />
+    </svg>
+  );
 }
 let running = 0;
 const points = trades.map((t, i) => {
@@ -225,25 +238,20 @@ transition: "border-color 0.2s",
           <div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>BALANCE</div>
           <div style={{ color: "#aaa", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{formatCurrency(q.capital + totalPnl)}</div>
         </div>
-        <div>
-          <div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>TRADES</div>
-          <div style={{ color: "#aaa", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{q.trades.length}</div>
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ color: "#666", fontSize: 11, marginBottom: 5, fontFamily: "'DM Mono', monospace" }}>NOTAS</div>
+          <textarea placeholder="Setup, motivo de entrada..." value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
+            style={{ width: "100%", background: "#1A1A24", border: "1px solid #333", borderRadius: 6, padding: "8px 12px", color: "#888", fontFamily: "'DM Mono', monospace", fontSize: 12, resize: "none", height: 60, boxSizing: "border-box" }} />
         </div>
-        {winRate && (
-          <div>
-            <div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>WIN RATE</div>
-            <div style={{ color: parseInt(winRate) >= 50 ? "#00FF9D" : "#FF4D6D", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{winRate}%</div>
+        {pnl !== null && (
+          <div style={{ background: pnl >= 0 ? "#00FF9D10" : "#FF4D6D10", border: `1px solid ${pnl >= 0 ? "#00FF9D" : "#FF4D6D"}30`, borderRadius: 6, padding: "10px 14px", marginBottom: 16, textAlign: "center" }}>
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 18, fontWeight: 700, color: pnl >= 0 ? "#00FF9D" : "#FF4D6D" }}>{formatCurrency(pnl)}</span>
           </div>
         )}
-        {qKey === "Q2" && (
-          <div>
-            <div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>HOY</div>
-            <div style={{ color: todayTrades >= 4 ? "#FF4D6D" : "#aaa", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{todayTrades}/10</div>
-          </div>
-        )}
-        <div style={{ marginLeft: "auto" }}>
-          <MiniSparkline trades={q.trades} color={q.color} />
-        </div>
+        <button onClick={handleSubmit}
+          style={{ width: "100%", padding: "12px", background: quadrant.color, borderRadius: 6, border: "none", color: "#000", fontFamily: "'DM Mono', monospace", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+          REGISTRAR OPERACIÓN
+        </button>
       </div>
 
       {trailingStatus && (
@@ -253,6 +261,8 @@ transition: "border-color 0.2s",
         </div>
       )}
     </div>
+  );
+}
 
     <div style={{ padding: "10px 16px", display: "flex", gap: 8 }}>
       <button onClick={() => setShowModal(true)}
@@ -297,9 +307,63 @@ transition: "border-color 0.2s",
                 </div>
                 <span style={{ color: t.pnl >= 0 ? "#00FF9D" : "#FF4D6D", fontSize: 12, fontFamily: "'DM Mono', monospace", fontWeight: 600 }}>{formatCurrency(t.pnl)}</span>
               </div>
-            ))
+              <div style={{ color: "#fff", fontSize: 15, fontWeight: 700, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>{q.name}</div>
+              <div style={{ color: "#555", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>{q.market} · {q.style}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ color: totalPnl >= 0 ? "#00FF9D" : "#FF4D6D", fontFamily: "'DM Mono', monospace", fontSize: 16, fontWeight: 700 }}>{formatCurrency(totalPnl)}</div>
+              <div style={{ color: totalPnl >= 0 ? "#00FF9D80" : "#FF4D6D80", fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{formatPct(pnlPct)}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 16, marginTop: 12, alignItems: "center" }}>
+            <div><div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>BALANCE</div><div style={{ color: "#aaa", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{formatCurrency(q.capital + totalPnl)}</div></div>
+            <div><div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>TRADES</div><div style={{ color: "#aaa", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{q.trades.length}</div></div>
+            {winRate && <div><div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>WIN RATE</div><div style={{ color: parseInt(winRate) >= 50 ? "#00FF9D" : "#FF4D6D", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{winRate}%</div></div>}
+            {qKey === "Q2" && <div><div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 2 }}>HOY</div><div style={{ color: todayTrades >= 4 ? "#FF4D6D" : "#aaa", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{todayTrades}/10</div></div>}
+            <div style={{ marginLeft: "auto" }}><MiniSparkline trades={q.trades} color={q.color} /></div>
+          </div>
+          {trailingStatus && (
+            <div style={{ marginTop: 10, background: "#FFB80010", border: "1px solid #FFB80030", borderRadius: 6, padding: "6px 10px", display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: "#FFB800", fontFamily: "'DM Mono', monospace", fontSize: 10 }}>TRAILING STOP</span>
+              <span style={{ color: "#FFB800", fontFamily: "'DM Mono', monospace", fontSize: 10, fontWeight: 700 }}>{formatCurrency(trailingStatus)}</span>
+            </div>
           )}
         </div>
+        <div style={{ padding: "10px 16px", display: "flex", gap: 8 }}>
+          <button onClick={() => setShowModal(true)} style={{ flex: 1, padding: "8px", background: q.color + "15", border: `1px solid ${q.color}40`, borderRadius: 6, color: q.color, fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>+ OPERAR</button>
+          <button onClick={() => setExpanded(e => !e)} style={{ flex: 1, padding: "8px", background: "#1A1A24", border: "1px solid #2A2A35", borderRadius: 6, color: "#666", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" }}>{expanded ? "OCULTAR ▲" : "HISTORIAL ▼"}</button>
+          {qKey === "Q4" && <button onClick={() => onAlarm(qKey)} style={{ padding: "8px 12px", background: q.alarmActive ? "#FF4D6D20" : "#1A1A24", border: `1px solid ${q.alarmActive ? "#FF4D6D" : "#2A2A35"}`, borderRadius: 6, color: q.alarmActive ? "#FF4D6D" : "#666", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" }}>🚨</button>}
+        </div>
+        {expanded && (
+          <div style={{ borderTop: "1px solid #1E1E2A" }}>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid #1A1A24" }}>
+              <div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 8, letterSpacing: 2 }}>REGLAS DEL SISTEMA</div>
+              {RULES[qKey].map((r, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+                  <span style={{ color: q.color, fontSize: 10 }}>▸</span>
+                  <span style={{ color: "#555", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>{r}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: "12px 16px" }}>
+              <div style={{ color: "#444", fontSize: 9, fontFamily: "'DM Mono', monospace", marginBottom: 8, letterSpacing: 2 }}>HISTORIAL</div>
+              {q.trades.length === 0 ? (
+                <div style={{ color: "#333", fontSize: 11, fontFamily: "'DM Mono', monospace", textAlign: "center", padding: "12px 0" }}>Sin operaciones registradas</div>
+              ) : (
+                [...q.trades].reverse().slice(0, 10).map(t => (
+                  <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid #1A1A24" }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ color: t.direction === "LONG" ? "#00FF9D" : "#FF4D6D", fontSize: 9, fontFamily: "'DM Mono', monospace", fontWeight: 700 }}>{t.direction}</span>
+                      <span style={{ color: "#888", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{t.symbol}</span>
+                      <span style={{ color: "#444", fontSize: 10, fontFamily: "'DM Mono', monospace" }}>{t.date}</span>
+                    </div>
+                    <span style={{ color: t.pnl >= 0 ? "#00FF9D" : "#FF4D6D", fontSize: 12, fontFamily: "'DM Mono', monospace", fontWeight: 600 }}>{formatCurrency(t.pnl)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     )}
   </div>
@@ -366,13 +430,14 @@ const pnlPct = (totalPnl / q.capital) * 100;
     }
   }
 
-  return {
-    ...prev,
-    alarms: newAlarms,
-    quadrants: {
-      ...prev.quadrants,
-      [qKey]: { ...q, trades: newTrades, trailingActive, trailingPeak },
-    },
+  const handleAlarm = useCallback((qKey) => {
+    setState(prev => ({ ...prev, quadrants: { ...prev.quadrants, [qKey]: { ...prev.quadrants[qKey], alarmActive: !prev.quadrants[qKey].alarmActive } } }));
+  }, []);
+
+  const handleAddAlarm = () => {
+    if (!alarmMsg.trim()) return;
+    setState(prev => ({ ...prev, alarms: [...prev.alarms, { message: alarmMsg, time: new Date().toLocaleTimeString() }] }));
+    setAlarmMsg(""); setShowAddAlarm(false);
   };
 });
 }, []);
@@ -427,18 +492,17 @@ return (
         <div style={{ fontSize: 11, color: totalPnl >= 0 ? "#00FF9D" : "#FF4D6D", marginTop: 4 }}>
           {formatCurrency(totalPnl)} {formatPct(totalPct)} total
         </div>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <span style={{ fontSize: 10, color: "#444" }}>AR {estAR}</span>
+          <span style={{ fontSize: 10, color: "#555" }}>NY {estNY}</span>
+        </div>
       </div>
-      <div style={{ flex: "1 1 120px", paddingRight: 24, marginRight: 24, marginBottom: 8 }}>
-        <div style={{ color: "#444", fontSize: 9, letterSpacing: 2, marginBottom: 6 }}>P&L HOY</div>
-        <div style={{ fontSize: 20, fontWeight: 600, color: totalPnl >= 0 ? "#00FF9D" : "#FF4D6D" }}>{formatCurrency(totalPnl)}</div>
-      </div>
-      {Object.entries(state.quadrants).map(([k, q]) => {
-        const qPnl = q.trades.reduce((s, t) => s + (t.pnl || 0), 0);
-        return (
-          <div key={k} style={{ flex: "1 1 80px", marginBottom: 8 }}>
-            <div style={{ color: q.color + "80", fontSize: 9, letterSpacing: 2, marginBottom: 6 }}>{k}</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: qPnl >= 0 ? "#00FF9D" : "#FF4D6D" }}>{formatCurrency(qPnl)}</div>
-            <div style={{ fontSize: 9, color: "#444" }}>{formatPct((qPnl / q.capital) * 100)}</div>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 16px" }}>
+        <div className="fade-in" style={{ background: "#0F0F14", border: "1px solid #1E1E2A", borderRadius: 12, padding: "20px 24px", marginBottom: 20, display: "flex", gap: 0, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 200px", borderRight: "1px solid #1E1E2A", paddingRight: 24, marginRight: 24, marginBottom: 8 }}>
+            <div style={{ color: "#444", fontSize: 9, letterSpacing: 2, marginBottom: 6 }}>CAPITAL TOTAL</div>
+            <div style={{ fontSize: 28, fontWeight: 600, color: "#fff" }}>{formatCurrency(totalBalance)}</div>
+            <div style={{ fontSize: 11, color: totalPnl >= 0 ? "#00FF9D" : "#FF4D6D", marginTop: 4 }}>{formatCurrency(totalPnl)} {formatPct(totalPct)} total</div>
           </div>
         );
       })}
@@ -471,7 +535,29 @@ return (
         <div key={k} className="fade-in">
           <QuadrantCard qKey={k} q={q} onAddTrade={handleAddTrade} onAlarm={handleAlarm} />
         </div>
-      ))}
+        {state.alarms.length > 0 && <AlarmPanel alarms={state.alarms} />}
+        <div style={{ marginBottom: 20, display: "flex", gap: 8 }}>
+          {showAddAlarm ? (
+            <>
+              <input value={alarmMsg} onChange={e => setAlarmMsg(e.target.value)} placeholder="Descripción de la alarma..." onKeyDown={e => e.key === "Enter" && handleAddAlarm()}
+                style={{ flex: 1, background: "#0F0F14", border: "1px solid #333", borderRadius: 6, padding: "8px 12px", color: "#fff", fontFamily: "'DM Mono', monospace", fontSize: 12 }} />
+              <button onClick={handleAddAlarm} style={{ padding: "8px 16px", background: "#FF4D6D20", border: "1px solid #FF4D6D40", borderRadius: 6, color: "#FF4D6D", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" }}>OK</button>
+              <button onClick={() => setShowAddAlarm(false)} style={{ padding: "8px 16px", background: "#1A1A24", border: "1px solid #333", borderRadius: 6, color: "#555", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" }}>✕</button>
+            </>
+          ) : (
+            <button onClick={() => setShowAddAlarm(true)} style={{ padding: "8px 16px", background: "#1A1A24", border: "1px solid #2A2A35", borderRadius: 6, color: "#555", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" }}>+ AGREGAR NOTA / ALARMA</button>
+          )}
+          {state.alarms.length > 0 && <button onClick={() => setState(p => ({ ...p, alarms: [] }))} style={{ padding: "8px 16px", background: "#1A1A24", border: "1px solid #2A2A35", borderRadius: 6, color: "#555", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" }}>LIMPIAR</button>}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+          {Object.entries(state.quadrants).map(([k, q]) => (
+            <div key={k} className="fade-in"><QuadrantCard qKey={k} q={q} onAddTrade={handleAddTrade} onAlarm={handleAlarm} /></div>
+          ))}
+        </div>
+        <div style={{ marginTop: 30, textAlign: "center", color: "#2A2A35", fontSize: 10, letterSpacing: 1 }}>
+          SILVESTRI TRADING SYSTEM · {new Date().toLocaleDateString("es-AR", { dateStyle: "long" })}
+        </div>
+      </div>
     </div>
 
     <div style={{ marginTop: 30, textAlign: "center", color: "#2A2A35", fontSize: 10, letterSpacing: 1 }}>
